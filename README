@@ -1,0 +1,13 @@
+Use the Spi-enable.zip from https://wiki.up-community.org/Pinout_UP2#Installing_ACPI_overrides_to_enable_spi_in_userspace and follow these steps:
+
+1. sudo ./install_hooks
+
+2. copy PCM512X.asl to the spi-enable folder
+
+3. sudo acpi-add PCM512X.asl
+
+3. reboot
+
+4. make sure you can see the status in 
+cat /sys/bus/acpi/devices/104C5122\:00/status
+
