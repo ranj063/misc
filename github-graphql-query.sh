@@ -17,7 +17,7 @@
 # ./github-graphql-query.sh GITHUB_TOKEN commit_range
 
 #get commit SHA1s in an array
-git log --oneline $2 > log.txt
+git log --reverse --oneline $2 > log.txt
 cat log.txt
 cat log.txt | awk '{print $1}' > commits.txt
 cat commits.txt
