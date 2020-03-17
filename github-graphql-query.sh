@@ -52,8 +52,23 @@ do
 	https://api.github.com/graphql | jq '.data.repository.commit.associatedPullRequests.edges' > node.json
 	PR_NUM=`cat node.json | jq -r '[.[] | .node.number] | .[]'`
 
-	#get emails of users who approved the PR
+	# Results could be paginated. So get the link head info and find the last page number to construct the URL
 	url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
+	curl -I -H "Authorization: token $1" $url > info.txt
+	IFS=$'\n' read -d '' -r -a info_lines < info.txt
+	for info_line in "${info_lines[@]}"
+	do
+		if [[ $info_line == *"Link:"* ]]; then
+			break
+		fi
+	done
+	IFS=$',' read -d '' -r -a link_header_fields <<< $info_line
+	IFS=$';' read -d '' -r -a link_header <<< ${link_header_fields[1]}
+	# remove the brackets
+	url=`echo "${link_header[0]:2: -1}"`
+
+	#get emails of users who approved the PR
+	#url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
 	curl -H "Authorization: token $1" $url | jq -r '[.[] | select(.state=="APPROVED") | {user: .user.login}]' > users.json
 	userarray=`cat users.json | jq -r '[.[] | join(",")] | @csv'`
 	IFS=',' read -r -a hubuser <<< "$userarray"
