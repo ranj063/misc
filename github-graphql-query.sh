@@ -56,16 +56,21 @@ do
 	url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
 	curl -I -H "Authorization: token $1" $url > info.txt
 	IFS=$'\n' read -d '' -r -a info_lines < info.txt
+	found_link=0
 	for info_line in "${info_lines[@]}"
 	do
 		if [[ $info_line == *"Link:"* ]]; then
+			found_link=1
 			break
 		fi
 	done
-	IFS=$',' read -d '' -r -a link_header_fields <<< $info_line
-	IFS=$';' read -d '' -r -a link_header <<< ${link_header_fields[1]}
-	# remove the brackets
-	url=`echo "${link_header[0]:2: -1}"`
+
+	if [[ $found_link -eq 1 ]]; then
+		IFS=$',' read -d '' -r -a link_header_fields <<< $info_line
+		IFS=$';' read -d '' -r -a link_header <<< ${link_header_fields[1]}
+		# remove the brackets
+		url=`echo "${link_header[0]:2: -1}"`
+	fi
 
 	#get emails of users who approved the PR
 	#url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
@@ -78,7 +83,7 @@ do
 	if [ $num_approvals == 0 ]
 	then
 		echo "No approvals for PR"$PR_NUM
-		exit
+		continue
 	fi
 
 	echo "Number of approvals: '$num_approvals'"
