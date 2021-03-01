@@ -59,7 +59,7 @@ do
 	found_link=0
 	for info_line in "${info_lines[@]}"
 	do
-		if [[ $info_line == *"Link:"* ]]; then
+		if [[ $info_line == *"link:"* ]]; then
 			found_link=1
 			break
 		fi
