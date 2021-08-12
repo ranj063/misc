@@ -119,6 +119,13 @@ do
 		fullnames="${fullnames},${fullname}"
 	done
 
+	# just cherry-pick if there're no valid emails/full names
+	if [[ -z "$emails" ]] || [[ -z $fullnames ]]
+	then
+		git cherry-pick $SHA
+		continue
+	fi
+
 	#remove the comma at the beginning
 	emails="${emails%\"}"
 	fullnames="${fullnames%\"}"
