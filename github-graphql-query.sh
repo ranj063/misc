@@ -18,9 +18,9 @@
 
 #get commit SHA1s in an array
 git log --reverse --oneline $2 > log.txt
+echo "Commits to pick:"
 cat log.txt
 cat log.txt | awk '{print $1}' > commits.txt
-cat commits.txt
 
 IFS=$'\n' read -d '' -r -a commits < commits.txt
 
@@ -47,14 +47,22 @@ do
 	script="$(echo $script)"
 
 	#get PR number from SHA
-	curl -H "Authorization: token $1" -X POST \
+	curl -s -H "Authorization: token $1" -X POST \
 	-d "{ \"query\": \"$script\"}" \
 	https://api.github.com/graphql | jq '.data.repository.commit.associatedPullRequests.edges' > node.json
 	PR_NUM=`cat node.json | jq -r '[.[] | .node.number] | .[]'`
+	PR_TITLE=`cat node.json | jq -r '[.[] | .node.title] | .[]'`
 
+	echo ""
+	echo "-----------------------------------------------"
+	git log --pretty='short' -1 ${SHA} | cat
+	echo ""
+	echo "from Github PR#${PR_NUM} - ${PR_TITLE}"
+
+	cp node.json "_tmp/node_${SHA}.json"
 	# Results could be paginated. So get the link head info and find the last page number to construct the URL
 	url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
-	curl -I -H "Authorization: token $1" $url > info.txt
+	curl -s -I -H "Authorization: token $1" $url > info.txt
 	IFS=$'\n' read -d '' -r -a info_lines < info.txt
 	found_link=0
 	for info_line in "${info_lines[@]}"
@@ -74,7 +82,7 @@ do
 
 	#get emails of users who approved the PR
 	#url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
-	curl -H "Authorization: token $1" $url | jq -r '[.[] | select(.state=="APPROVED") | {user: .user.login}]' > users.json
+	curl -s -H "Authorization: token $1" $url | jq -r '[.[] | select(.state=="APPROVED") | {user: .user.login}]' > users.json
 	userarray=`cat users.json | jq -r '[.[] | join(",")] | @csv'`
 	IFS=',' read -r -a hubuser <<< "$userarray"
 
@@ -82,8 +90,8 @@ do
 
 	if [ $num_approvals == 0 ]
 	then
-		echo "No approvals for PR"$PR_NUM
-		git cherry-pick $SHA
+		echo "No approvals"
+		git cherry-pick $SHA >&/dev/null
 		continue
 	fi
 
@@ -96,8 +104,8 @@ do
 		github_name="${element%\"}"
 		github_name="${github_name#\"}"
 		url="https://api.github.com/users/"$github_name
-		email=`curl -H "Authorization: token $1" $url | jq '.email'`
-		fullname=`curl -H "Authorization: token $1" $url | jq '.name'`
+		email=`curl -s -H "Authorization: token $1" $url | jq '.email'`
+		fullname=`curl -s -H "Authorization: token $1" $url | jq '.name'`
 
 		#remove the quotes
 		github_email="${email%\"}"
@@ -123,7 +131,7 @@ do
 	# just cherry-pick if there're no valid emails/full names
 	if [[ -z "$emails" ]] || [[ -z $fullnames ]]
 	then
-		git cherry-pick $SHA
+		git cherry-pick $SHA >&/dev/null
 		continue
 	fi
 
@@ -154,8 +162,8 @@ do
 	reviewed=$reviewed"\""
 
 	#cherry-pick and amend commit to add reviewed-by tags
-	git cherry-pick $SHA
-	git rebase HEAD~1 -x 'git commit --amend -m "$(git log --format=%B -n1)$(echo -e '"$reviewed"')"'
+	git cherry-pick $SHA >&/dev/null
+	git rebase HEAD~1 -x 'git commit --amend -m "$(git log --format=%B -n1)$(echo -e '"$reviewed"')"' >&/dev/null
 done
 
 rm users.json
