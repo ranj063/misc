@@ -154,7 +154,7 @@ do
 
 	#cherry-pick and amend commit to add reviewed-by tags
 	git cherry-pick $SHA
-	git rebase HEAD~1 -x 'git commit --amend -m "$(git log --format=%B -n1)$(echo '"$reviewed"')"'
+	git rebase HEAD~1 -x 'git commit --amend -m "$(git log --format=%B -n1)$(echo -e '"$reviewed"')"'
 done
 
 rm users.json
