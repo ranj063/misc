@@ -16,6 +16,35 @@
 #commit range should be start_commit..end_commit meaning the start_commit is not included
 # ./github-graphql-query.sh GITHUB_TOKEN commit_range
 
+# List of Intel Linux developers whose email address should be fixed up from
+# @intel.com to @linux.intel.com
+intel_linux_developers=(
+	"pierre-louis.bossart@intel.com"	"pierre-louis.bossart@linux.intel.com"
+	"ranjani.sridharan@intel.com"		"ranjani.sridharan@linux.intel.com"
+	"fred.oh@intel.com"			"fred.oh@linux.intel.com"
+	"guennadi.liakhovetski@intel.com"	"guennadi.liakhovetski@linux.intel.com"
+	"kai.vehmanen@intel.com"		"kai.vehmanen@linux.intel.com"
+	"jaska.uimonen@intel.com"		"jaska.uimonen@linux.intel.com"
+	"seppo.ingalsuo@intel.com"		"seppo.ingalsuo@linux.intel.com"
+	"peter.ujfalusi@intel.com"		"peter.ujfalusi@linux.intel.com"
+	"bard.liao@intel.com"			"yung-chuan.liao@linux.intel.com"
+)
+
+github_email_fixup() {
+	let devs="${#intel_linux_developers[@]} / 2"
+	declare -n ret=$2
+
+	for (( i=0; i<${devs}; i++ ));
+	do
+		let "dev_idx=$i*2"
+		if [[ $1 == ${intel_linux_developers[$dev_idx]} ]]
+		then
+			ret=${intel_linux_developers[$dev_idx+1]}
+			return 0
+		fi
+	done
+}
+
 #get commit SHA1s in an array
 git log --reverse --oneline $2 > log.txt
 echo "Commits to pick:"
@@ -123,6 +152,8 @@ do
 		then
 			continue
 		fi
+
+		github_email_fixup ${github_email} github_email
 
 		emails="${emails},${github_email}"
 		fullnames="${fullnames},${fullname}"
