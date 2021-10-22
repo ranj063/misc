@@ -83,6 +83,7 @@ do
 	if [ $num_approvals == 0 ]
 	then
 		echo "No approvals for PR"$PR_NUM
+		git cherry-pick $SHA
 		continue
 	fi
 
