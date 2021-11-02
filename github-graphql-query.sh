@@ -45,9 +45,24 @@ github_email_fixup() {
 	done
 }
 
-#get commit SHA1s in an array
-git log --reverse --oneline $2 > log.txt
-echo "Commits to pick:"
+if [[ $# != 2 ]]
+then
+	echo "Missing commit or commit range."
+	exit 1
+fi
+
+# get commit SHA1s in an array
+if [[ $2 == *".."* ]]
+then
+	# a range is given
+	git log --reverse --oneline $2 > log.txt
+	echo "Commits to pick:"
+else
+	# single commit to pick
+	git log -1 --oneline $2 > log.txt
+	echo "Commit to pick:"
+fi
+
 cat log.txt
 cat log.txt | awk '{print $1}' > commits.txt
 
