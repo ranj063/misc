@@ -88,7 +88,6 @@ do
 	echo ""
 	echo "from Github PR#${PR_NUM} - ${PR_TITLE}"
 
-	cp node.json "_tmp/node_${SHA}.json"
 	# Results could be paginated. So get the link head info and find the last page number to construct the URL
 	url="https://api.github.com/repos/thesofproject/linux/pulls/"$PR_NUM"/reviews"
 	curl -s -I -H "Authorization: token $1" $url > info.txt
