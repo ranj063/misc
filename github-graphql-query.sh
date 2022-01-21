@@ -16,9 +16,8 @@
 #commit range should be start_commit..end_commit meaning the start_commit is not included
 # ./github-graphql-query.sh GITHUB_TOKEN commit_range
 
-# List of Intel Linux developers whose email address should be fixed up from
-# @intel.com to @linux.intel.com
-intel_linux_developers=(
+# List of developers whose email address should be fixed up
+linux_developers=(
 	"pierre-louis.bossart@intel.com"	"pierre-louis.bossart@linux.intel.com"
 	"ranjani.sridharan@intel.com"		"ranjani.sridharan@linux.intel.com"
 	"fred.oh@intel.com"			"fred.oh@linux.intel.com"
@@ -28,18 +27,19 @@ intel_linux_developers=(
 	"seppo.ingalsuo@intel.com"		"seppo.ingalsuo@linux.intel.com"
 	"peter.ujfalusi@intel.com"		"peter.ujfalusi@linux.intel.com"
 	"bard.liao@intel.com"			"yung-chuan.liao@linux.intel.com"
+	"curtis@malainey.com"			"cujomalainey@chromium.org"
 )
 
 github_email_fixup() {
-	let devs="${#intel_linux_developers[@]} / 2"
+	let devs="${#linux_developers[@]} / 2"
 	declare -n ret=$2
 
 	for (( i=0; i<${devs}; i++ ));
 	do
 		let "dev_idx=$i*2"
-		if [[ $1 == ${intel_linux_developers[$dev_idx]} ]]
+		if [[ $1 == ${linux_developers[$dev_idx]} ]]
 		then
-			ret=${intel_linux_developers[$dev_idx+1]}
+			ret=${linux_developers[$dev_idx+1]}
 			return 0
 		fi
 	done
